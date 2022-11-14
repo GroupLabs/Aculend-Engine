@@ -11,6 +11,7 @@ def get_users(db):
 
         # request data from inverite
         req_id = bank['request_guid']
+
         sta = requests.get(
             f'https://sandbox.inverite.com/api/v2/fetch/{req_id}',
             headers={
@@ -22,51 +23,55 @@ def get_users(db):
         # switch to json
         sta = sta.json()
 
-        # catch failed connection
-        try:
-            sta['status']
-        except KeyError:
-            print(sta['error'])
-            raise ConnectionRefusedError("Failed to connect with Inverite")
+        if len(sta) == 1:
+            print(f"{bank['request_guid']} has no data in inverite system")
 
-        # if verified
-        if(sta['status'] == "Verified"):
-
-            # get risk score from Inverite
-            risk_score = requests.post(
-                'https://sandbox.inverite.com/api/v2/risk',
-                data={"request" : sta["request"]},
-                headers={
-                    "content-type": "application/json",
-                    'Auth': f"{os.getenv('INVERITE_AUTH')}"
-                }
-            )
-
-            # switch to json
-            risk_score = risk_score.json()
-
+        else:
             # catch failed connection
             try:
-                risk_score['bin_score']
+                sta['status']
             except KeyError:
-                
-                # assign score in case it doesn't exist
-                risk_score['bin_score'] = 0
+                print(sta['error'])
+                raise ConnectionRefusedError("Failed to connect with Inverite")
 
-        # build item
-        item = {
-            "name" : sta["name"],
-            "status" : "true",
-            "email" : sta["contacts"][0]['contact'],
-            "phone" : sta["contacts"][1]['contact'],
-            "bankname" : bank["bankname"],
-            "score" : risk_score['bin_score']
-        }
+            # if verified
+            if(sta['status'] == "Verified"):
 
-        # append to response
-        res.append(item)
+                # get risk score from Inverite
+                risk_score = requests.post(
+                    'https://sandbox.inverite.com/api/v2/risk',
+                    data={"request" : sta["request"]},
+                    headers={
+                        "content-type": "application/json",
+                        'Auth': f"{os.getenv('INVERITE_AUTH')}"
+                    }
+                )
 
-    print(res)
+                # switch to json
+                risk_score = risk_score.json()
+
+                # catch failed connection
+                try:
+                    risk_score['bin_score']
+                except KeyError:
+                    
+                    # assign score in case it doesn't exist
+                    risk_score['bin_score'] = 0
+
+            # build item
+            item = {
+                "name" : sta["name"],
+                "status" : "true",
+                "email" : sta["contacts"][0]['contact'],
+                "phone" : sta["contacts"][1]['contact'],
+                "bankname" : bank["bankname"],
+                "score" : risk_score['bin_score']
+            }
+
+            # append to response
+            res.append(item)
+
+    # print(res)
 
     return json.dumps(res)
 
