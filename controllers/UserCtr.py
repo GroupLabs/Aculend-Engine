@@ -1,6 +1,7 @@
 from models.UserModel import User
 import base64
 import bcrypt
+import jwt
 
 def register(data, db):
     # Check if email is registered
@@ -9,19 +10,18 @@ def register(data, db):
     # throw error if exists
     if user is not None:
         raise FileExistsError("Email already registered")
-
     # assimilate to User class
     user = User(
         name=data["name"],
         email=data["email"],
-        password=data["password"],
+        password=bcrypt.hashpw(data["password"].encode('utf8'), bcrypt.gensalt()),
         avatar="Not set"
     )
 
     # upload to users collection
     db["users"].insert_one(user.get_dict())
 
-def login():
+def login(data, db):
     # Check if email is registered
     user = db["users"].find_one({"email": data["email"]})
 
@@ -30,19 +30,23 @@ def login():
         raise FileNotFoundError("User not found")
 
     # check if password is valid
-    valid = bcrypt.checkpw(data["pass"], user["password"])
+    valid = bcrypt.checkpw(data["pass"].encode('utf8'), user["password"])
 
     if not valid:
         raise ConnectionRefusedError("User or password is incorrect")
 
     # Building JWT
     payload = {
-        "id" : user["_id"],
+        "id" : str(user["_id"]),
         "name" : user["name"],
         "avatar" : user["avatar"]
     }
 
-    token = ""
+    print(payload)
+
+    key = user["password"]
+
+    token = jwt.encode(payload, key, algorithm="HS256")
 
     return token
 

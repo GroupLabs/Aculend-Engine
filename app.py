@@ -1,6 +1,6 @@
 from flask import Flask, Response, request
 from dotenv import load_dotenv
-from controllers.UserCtr import register, send_email
+from controllers.UserCtr import register, login, send_email
 from controllers.BankCtr import get_users, get_banklist, create
 from flask_cors import CORS # remove for deploy
 from utils.connection import connectMongo
@@ -30,11 +30,19 @@ def register_route():
 
     return Response("Success", status=200,  mimetype='application/json')
 
-@app.route("/login", methods=['GET'])
+@app.route("/login", methods=['POST'])
 def login_route():
-    # GET JWT
-    # repsond with JWT
-    return Response("Success", status=200,  mimetype='application/json')
+    try:
+        token = login(request.json, db)
+    except ConnectionRefusedError:
+        return Response("Authorization Error", status=401,  mimetype='application/json')
+    except FileNotFoundError:
+        return Response("User Not Found", status=404,  mimetype='application/json')
+    except Exception as e:
+        print(e)
+        return Response("Unknown Error", status=400,  mimetype='application/json')
+
+    return {"token" :token}
 
 @app.route("/changepass", methods=['POST'])
 def changepass_route():
