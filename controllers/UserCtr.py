@@ -38,9 +38,9 @@ def register(data, db):
     user = User(
         firstname=data["firstname"],
         lastname=data["lastname"],
-        username=data["lastname"],
+        username=data["username"],
         email=data["email"],
-        password=data["password"],
+        password=bcrypt.hashpw(data["password"].encode('utf8'), bcrypt.gensalt()),
         avatar="Not set"
     )
 
@@ -50,20 +50,29 @@ def register(data, db):
 def login(data, db):
     # Check if email is registered
     user = db["users"].find_one({"email": data["email"]})
-
     # throw error if user does not exist
     if user is None:
         print("USER DOESN'T EXIST")
         raise FileNotFoundError("User not found")
-
+    
     # check if password is valid
-    valid = False
-    if (data["pass"] == user["password"]):
-        valid = True
-
+    valid = bcrypt.checkpw(data["pass"].encode('utf8'), user["password"])
     if not valid:
-        print("Get OUT")
         raise ConnectionRefusedError("User or password is incorrect")
+   
+    # Building JWT
+    payload = {
+        "id" : str(user["_id"]),
+        "name" : user["username"],
+        "avatar" : user["avatar"]
+    }
+    print("5")
+    print(payload)
+
+    # key = user["password"]
+    key = secrets.token_hex(16)
+    token = jwt.encode(payload, key, algorithm="HS256")
+    return token
 
     
 
