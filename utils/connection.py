@@ -5,9 +5,9 @@ import pymongo
 def connectMongo():
     # Connection
 
-    conn_str = f"mongodb+srv://admin:{os.getenv('MONGO_PASS')}@cluster0.ngbgtru.mongodb.net/?retryWrites=true&w=majority"
+    conn_str = f"mongodb://127.0.0.1:27017/"
 
     client = pymongo.MongoClient(conn_str)
-    db = client.test
+    db = client["local"]
 
     return db

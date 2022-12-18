@@ -1,7 +1,29 @@
 from models.UserModel import User
 import base64
 import bcrypt
+import secrets
 import jwt
+
+
+
+class User:
+    def __init__(self, firstname, lastname, username, email, password, avatar):
+        self.firstname = firstname
+        self.lastname = lastname
+        self.username = username
+        self.email = email
+        self.password = password
+        self.avatar = avatar
+    
+    def get_dict(self):
+        return {
+            "firstname": self.firstname,
+            "lastname": self.lastname,
+            "username": self.username,
+            "email": self.email,
+            "password": self.password,
+            "avatar": self.avatar,
+        }
 
 def register(data, db):
     # Check if email is registered
@@ -9,12 +31,16 @@ def register(data, db):
 
     # throw error if exists
     if user is not None:
+        print("ALREADY A USER")
         raise FileExistsError("Email already registered")
+
     # assimilate to User class
     user = User(
-        name=data["name"],
+        firstname=data["firstname"],
+        lastname=data["lastname"],
+        username=data["lastname"],
         email=data["email"],
-        password=bcrypt.hashpw(data["password"].encode('utf8'), bcrypt.gensalt()),
+        password=data["password"],
         avatar="Not set"
     )
 
@@ -27,47 +53,40 @@ def login(data, db):
 
     # throw error if user does not exist
     if user is None:
+        print("USER DOESN'T EXIST")
         raise FileNotFoundError("User not found")
 
     # check if password is valid
-    valid = bcrypt.checkpw(data["pass"].encode('utf8'), user["password"])
+    valid = False
+    if (data["pass"] == user["password"]):
+        valid = True
 
     if not valid:
+        print("Get OUT")
         raise ConnectionRefusedError("User or password is incorrect")
 
-    # Building JWT
-    payload = {
-        "id" : str(user["_id"]),
-        "name" : user["name"],
-        "avatar" : user["avatar"]
-    }
+    
 
-    print(payload)
+    
 
-    key = user["password"]
+# def current_user():
+#     return
 
-    token = jwt.encode(payload, key, algorithm="HS256")
+# def change_pass(data, db): # Requires testing
+#     # check if email exists
+#     user = db["users"].find_one({"email":data["email"]})
 
-    return token
+#     # throw error if not in database
+#     if user is None:
+#         raise FileNotFoundError("Email not found")
 
-def current_user():
-    return
+#     # update password
+#     db["users"].update_one({"email":data["email"]}, {"password":data["pass"]})
 
-def change_pass(data, db): # Requires testing
-    # check if email exists
-    user = db["users"].find_one({"email":data["email"]})
-
-    # throw error if not in database
-    if user is None:
-        raise FileNotFoundError("Email not found")
-
-    # update password
-    db["users"].update_one({"email":data["email"]}, {"password":data["pass"]})
-
-def str_to_b64(string):
-    message_bytes = string.encode('ascii')
-    base64_bytes = base64.b64encode(message_bytes)
-    return base64_bytes.decode('ascii')
+# def str_to_b64(string):
+#     message_bytes = string.encode('ascii')
+#     base64_bytes = base64.b64encode(message_bytes)
+#     return base64_bytes.decode('ascii')
 
 def send_email(data, db): # Requires testing
     # check if email exists
