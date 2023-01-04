@@ -2,12 +2,12 @@ from flask import Flask, Response, request
 from dotenv import load_dotenv
 from controllers.UserCtr import register, login, send_email
 from controllers.BankCtr import get_users, get_banklist, create
-from flask_cors import CORS # remove for deploy
+# from flask_cors import CORS # remove for deploy
 from utils.connection import connectMongo
 import sys
 
 app = Flask(__name__)
-CORS(app) # remove for deploy
+# CORS(app) # remove for deploy
 
 db = connectMongo()
 
