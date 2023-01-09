@@ -42,8 +42,6 @@ def login(data, db):
         "avatar" : user["avatar"]
     }
 
-    print(payload)
-
     key = user["password"]
 
     token = jwt.encode(payload, key, algorithm="HS256")
