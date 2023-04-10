@@ -1,5 +1,6 @@
-Use the following commands to try to get it running on your machine:
+# Quickstart
 
+Use the following commands to try to get it running on your machine:
 
 0. First make a python virtual environment and install packages:
 
